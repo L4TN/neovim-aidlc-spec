@@ -74,6 +74,25 @@ These cost real debugging time — don't rediscover them:
 6. **New `PATH` entries need a terminal restart** — existing processes keep stale env vars.
 7. **Windows CLI shims are `.cmd` files** — check `executable()` and shell wrappers before enabling lazy execution.
 
+## Runtime-agnostic by design
+
+Docker is the industry standard, but the spec does not lock you to Docker Desktop. The `Dockerfile` and `docker-compose.yml` you already have follow **open standards** (OCI image spec and the open-source Compose Specification), so the runtime is a swappable detail:
+
+| Artifact | Standard | Docker Desktop | OrbStack | Rancher Desktop | Podman Desktop | Apple `container` |
+|----------|----------|:---:|:---:|:---:|:---:|:---:|
+| `Dockerfile` | OCI image spec | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `docker-compose.yml` | Compose Specification | ✅ | ✅ | ✅ (ships real docker-compose) | ✅ (podman-compose, ~95% parity) | ❌ (3rd-party bridges only) |
+| OCI images (Docker Hub, GHCR, ECR...) | OCI | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Same `docker` CLI | compatible APIs | ✅ | ✅ | ✅ | ✅ (alias) | ❌ (`container` CLI) |
+| `lazydocker` (Containers tab) | container API | ✅ | ✅ | ✅ | ✅ | ❌ |
+
+Per platform:
+
+- **macOS:** OrbStack is the pragmatic pick (~200MB idle vs ~4GB Docker Desktop, ~2s boot). Apple's native `container` (v1.0, macOS 26) is one micro-VM per container with strong isolation and low host overhead — worth tracking, but no native Compose yet, so not ready for multi-container stacks.
+- **Windows:** Docker Desktop → WSL2 + plain Docker CLI (lightest, drops the Desktop license), Rancher Desktop (open source, optional K8s) or Podman Desktop (daemonless, rootless).
+
+The `lazydocker` Containers tab works unchanged with any Docker-API-compatible backend.
+
 ## Secrets policy
 
 No credentials in the repo, the spec, or the config. Use `aws sso login` / `az login` / `gh auth login` (only when the user explicitly confirms), per-tab env vars, git-ignored `.env` files, or a secrets CLI (e.g., 1Password `op`).
